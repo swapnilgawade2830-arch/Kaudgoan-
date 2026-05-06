@@ -505,6 +505,40 @@
 </div>
 
 <script>
+  // ===== SUPABASE CONFIG =====
+  const SUPABASE_URL = 'https://elkgxcqbmhrmuqwodode.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_UE6WFUfnBgyO0vHrcsvExA_gT7EISBd';
+
+  async function dbGet(table, filter='') {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc${filter}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    return res.json();
+  }
+
+  async function dbInsert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', 'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  }
+
+  async function dbUpdate(table, id, data) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+  }
+
   // ===== DATA =====
   const ADMINS = [
     { user: "swapnil", pass: "swap@2830", name: "Swapnil Gawade" },
@@ -513,35 +547,9 @@
 
   let isAdmin = false;
   let adminName = "";
-
-  let problems = [
-    {
-      id: 1, name: "सुरेश पाटील", category: "🛣️ रस्ता",
-      desc: "मुख्य रस्त्याजवळची गटार तुटली आहे. पावसाळ्यात खूप पाणी साचते, मुले शाळेत जाऊ शकत नाहीत.",
-      photos: [], time: "२ तासांपूर्वी", likes: 14, liked: false, status: "seen"
-    },
-    {
-      id: 2, name: "गीता देवी", category: "💧 पाणी",
-      desc: "आमच्या वस्तीत ३ दिवसांपासून पाणी येत नाही. हातपंप पण बंद आहे. घरचं काम ठप्प झालंय.",
-      photos: [], time: "५ तासांपूर्वी", likes: 22, liked: false, status: "new"
-    }
-  ];
-
-  let schemes = [
-    {
-      id: 1, title: "प्रधानमंत्री आवास योजना",
-      category: "🏠 घरकुल",
-      desc: "गरीब कुटुंबांना स्वतःचे घर मिळावे यासाठी सरकारकडून अनुदान दिले जाते. पात्र लाभार्थ्यांनी ग्रामपंचायत कार्यालयात अर्ज करावा.",
-      deadline: "३१ मे २०२५", by: "ग्रामपंचायत", time: "काल"
-    },
-    {
-      id: 2, title: "पीक विमा योजना",
-      category: "👩‍🌾 शेती",
-      desc: "नैसर्गिक आपत्तीमुळे पिकाचे नुकसान झाल्यास शेतकऱ्यांना नुकसान भरपाई मिळते. सर्व शेतकऱ्यांनी नोंदणी करावी.",
-      deadline: "१५ जून २०२५", by: "सरपंच", time: "३ दिवसांपूर्वी"
-    }
-  ];
-
+  let problems = [];
+  let schemes = [];
+  let likedIds = JSON.parse(localStorage.getItem('likedIds')||'[]');
   let selectedCat = "";
   let selectedPhotos = [];
   let currentFilter = "all";
@@ -555,17 +563,20 @@
     "📚 शाळा": "#9B59B6", "🔖 इतर": "#27AE60"
   };
 
-  const schemeIcons = {
-    "🏠 घरकुल": "🏠", "👩‍🌾 शेती": "👩‍🌾", "📚 शिक्षण": "📚",
-    "🏥 आरोग्य": "🏥", "💰 आर्थिक": "💰", "🔖 इतर": "📋"
-  };
-
   const avatarColors = ["#E74C3C","#3498DB","#2ECC71","#F39C12","#9B59B6","#1ABC9C","#E67E22","#D35400"];
 
   function getInitials(name) { return name.split(' ').map(n=>n[0]).join('').slice(0,2); }
   function getAvatarColor(name) {
     let s=0; for(let c of name) s+=c.charCodeAt(0);
     return avatarColors[s % avatarColors.length];
+  }
+
+  function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - new Date(ts)) / 60000);
+    if(diff < 1) return 'आत्ता';
+    if(diff < 60) return diff + ' मिनिटांपूर्वी';
+    if(diff < 1440) return Math.floor(diff/60) + ' तासांपूर्वी';
+    return Math.floor(diff/1440) + ' दिवसांपूर्वी';
   }
 
   // ===== TAB =====
@@ -575,6 +586,8 @@
       document.getElementById(t==='feed'?'feedSection':t==='schemes'?'schemesSection':'submitSection')
         .classList.toggle('active', t===tab);
     });
+    if(tab==='feed') loadProblems();
+    if(tab==='schemes') loadSchemes();
   }
 
   // ===== ADMIN LOGIN =====
@@ -595,10 +608,8 @@
     const p = document.getElementById('loginPass').value.trim();
     const admin = ADMINS.find(a => a.user===u && a.pass===p);
     if(admin) {
-      isAdmin = true;
-      adminName = admin.name;
-      closeLoginModal();
-      updateAdminUI();
+      isAdmin = true; adminName = admin.name;
+      closeLoginModal(); updateAdminUI();
       showToast('✅ ' + adminName + ' यांनी login केले!');
     } else {
       document.getElementById('loginError').style.display='block';
@@ -607,8 +618,7 @@
 
   function logout() {
     isAdmin = false; adminName = "";
-    updateAdminUI();
-    showToast('👋 Logout झाले');
+    updateAdminUI(); showToast('👋 Logout झाले');
   }
 
   function updateAdminUI() {
@@ -616,15 +626,11 @@
     const banner = document.getElementById('schemeAdminBanner');
     const formCard = document.getElementById('schemeFormCard');
     if(isAdmin) {
-      btn.textContent = '✅ ' + adminName;
-      btn.classList.add('logged-in');
-      banner.classList.add('show');
-      formCard.style.display='block';
+      btn.textContent = '✅ ' + adminName; btn.classList.add('logged-in');
+      banner.classList.add('show'); formCard.style.display='block';
     } else {
-      btn.textContent = '🔒 Admin';
-      btn.classList.remove('logged-in');
-      banner.classList.remove('show');
-      formCard.style.display='none';
+      btn.textContent = '🔒 Admin'; btn.classList.remove('logged-in');
+      banner.classList.remove('show'); formCard.style.display='none';
     }
   }
 
@@ -650,29 +656,30 @@
     });
   }
 
-  function submitProblem() {
+  async function submitProblem() {
     const name=document.getElementById('userName').value.trim();
     const desc=document.getElementById('problemDesc').value.trim();
     if(!name){alert('नाव टाकणे आवश्यक आहे!');return;}
     if(!selectedCat){alert('तक्रारीचा प्रकार निवडा!');return;}
     if(!desc){alert('तक्रार सांगा!');return;}
 
-    const pp=selectedPhotos.map(f=>new Promise(res=>{
-      const r=new FileReader();r.onload=ev=>res(ev.target.result);r.readAsDataURL(f);
-    }));
+    const btn = document.querySelector('#submitSection .submit-btn');
+    btn.textContent = '⏳ पाठवत आहे...'; btn.disabled = true;
 
-    Promise.all(pp).then(photos=>{
-      problems.unshift({id:Date.now(),name,category:selectedCat,desc,photos,time:"आत्ता",likes:0,liked:false,status:"new"});
-      renderFeed();
-      document.getElementById('userName').value='';
-      document.getElementById('problemDesc').value='';
-      document.getElementById('previewGrid').innerHTML='';
-      document.getElementById('photoInput').value='';
-      document.querySelectorAll('#catChips .chip').forEach(c=>c.classList.remove('selected'));
-      selectedCat=''; selectedPhotos=[];
-      showToast('✅ तक्रार यशस्वीरित्या नोंदवली!');
-      switchTab('feed');
+    await dbInsert('problems', {
+      name, category: selectedCat, description: desc,
+      time_posted: 'आत्ता', likes: 0, status: 'new'
     });
+
+    document.getElementById('userName').value='';
+    document.getElementById('problemDesc').value='';
+    document.getElementById('previewGrid').innerHTML='';
+    document.getElementById('photoInput').value='';
+    document.querySelectorAll('#catChips .chip').forEach(c=>c.classList.remove('selected'));
+    selectedCat=''; selectedPhotos=[];
+    btn.textContent='🚀 तक्रार पाठवा'; btn.disabled=false;
+    showToast('✅ तक्रार यशस्वीरित्या नोंदवली!');
+    switchTab('feed');
   }
 
   // ===== SCHEME FORM =====
@@ -686,7 +693,7 @@
     el.classList.add('selected'); selectedSchemeBy=by;
   }
 
-  function submitScheme() {
+  async function submitScheme() {
     if(!isAdmin){alert('Admin login आवश्यक!');return;}
     const title=document.getElementById('schemeTitle').value.trim();
     const desc=document.getElementById('schemeDesc').value.trim();
@@ -696,17 +703,22 @@
     if(!desc){alert('माहिती लिहा!');return;}
     if(!selectedSchemeBy){alert('कोण पोस्ट करत आहे ते निवडा!');return;}
 
-    schemes.unshift({
-      id:Date.now(), title, category:selectedSchemeCat, desc,
-      deadline: deadline||'', by:selectedSchemeBy, time:"आत्ता"
+    const btn = document.querySelector('#schemeFormCard .submit-btn');
+    btn.textContent='⏳ पोस्ट करत आहे...'; btn.disabled=true;
+
+    await dbInsert('schemes', {
+      title, category: selectedSchemeCat, description: desc,
+      deadline: deadline||'', posted_by: selectedSchemeBy, time_posted: 'आत्ता'
     });
-    renderSchemes();
+
     document.getElementById('schemeTitle').value='';
     document.getElementById('schemeDesc').value='';
     document.getElementById('schemeDeadline').value='';
     document.querySelectorAll('#schemeCatChips .chip, #schemeByChips .chip').forEach(c=>c.classList.remove('selected'));
     selectedSchemeCat=''; selectedSchemeBy='';
+    btn.textContent='📢 योजना पोस्ट करा'; btn.disabled=false;
     showToast('📢 योजना यशस्वीरित्या पोस्ट केली!');
+    loadSchemes();
   }
 
   // ===== FILTERS =====
@@ -725,10 +737,28 @@
   }
 
   // ===== LIKE =====
-  function toggleLike(id) {
-    const p=problems.find(x=>x.id===id);
-    if(!p) return;
-    p.liked=!p.liked; p.likes+=p.liked?1:-1; renderFeed();
+  async function toggleLike(id, currentLikes) {
+    const alreadyLiked = likedIds.includes(id);
+    const newLikes = alreadyLiked ? currentLikes-1 : currentLikes+1;
+    if(alreadyLiked) likedIds = likedIds.filter(x=>x!==id);
+    else likedIds.push(id);
+    localStorage.setItem('likedIds', JSON.stringify(likedIds));
+    await dbUpdate('problems', id, {likes: newLikes});
+    loadProblems();
+  }
+
+  // ===== LOAD DATA =====
+  async function loadProblems() {
+    document.getElementById('feedList').innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>लोड होत आहे...</p></div>';
+    problems = await dbGet('problems');
+    document.getElementById('problemCount').textContent = problems.length + ' तक्रारी';
+    renderFeed();
+  }
+
+  async function loadSchemes() {
+    document.getElementById('schemeList').innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>लोड होत आहे...</p></div>';
+    schemes = await dbGet('schemes');
+    renderSchemes();
   }
 
   // ===== LIGHTBOX =====
@@ -749,7 +779,9 @@
   function renderFeed() {
     const list=document.getElementById('feedList');
     const filtered = currentFilter==='all' ? problems
-      : problems.filter(p=>p.category.includes(currentFilter));
+      : problems.filter(p=>p.category && p.category.includes(currentFilter));
+
+    document.getElementById('problemCount').textContent = problems.length + ' तक्रारी';
 
     if(filtered.length===0){
       list.innerHTML=`<div class="empty-state"><div class="icon">🌾</div><p>या प्रकारात अजून कोणतीही तक्रार नाही</p></div>`;
@@ -758,11 +790,9 @@
 
     list.innerHTML=filtered.map(p=>{
       const catColor=catColors[p.category]||'#888';
-      const avatarColor=getAvatarColor(p.name);
-      const initials=getInitials(p.name);
-      const pc=p.photos.length;
-      const pcls=pc===1?'one':pc===2?'two':'three';
-      const photosHTML=pc>0?`<div class="card-photos ${pcls}">${p.photos.map(src=>`<img class="card-photo" src="${src}" onclick="openLightbox('${src}')">`).join('')}</div>`:'';
+      const avatarColor=getAvatarColor(p.name||'?');
+      const initials=getInitials(p.name||'?');
+      const liked = likedIds.includes(p.id);
       return `
         <div class="problem-card">
           <div class="card-top">
@@ -770,16 +800,15 @@
               <div class="avatar" style="background:${avatarColor}">${initials}</div>
               <div class="user-info">
                 <div class="name">${p.name}</div>
-                <div class="time">${p.time}</div>
+                <div class="time">${timeAgo(p.created_at)}</div>
               </div>
             </div>
             <div class="category-badge" style="background:${catColor}">${p.category}</div>
           </div>
-          <div class="card-desc">${p.desc}</div>
-          ${photosHTML}
+          <div class="card-desc">${p.description}</div>
           <div class="card-actions">
-            <button class="action-btn ${p.liked?'liked':''}" onclick="toggleLike(${p.id})">
-              👍 ${p.likes} लोक सहमत
+            <button class="action-btn ${liked?'liked':''}" onclick="toggleLike(${p.id}, ${p.likes})">
+              👍 ${p.likes||0} लोक सहमत
             </button>
             <div class="status-badge ${p.status==='new'?'status-new':'status-seen'}">
               ${p.status==='new'?'🔴 नवीन':'✅ पाहिले'}
@@ -793,34 +822,32 @@
   function renderSchemes() {
     const list=document.getElementById('schemeList');
     const filtered = currentSchemeFilter==='all' ? schemes
-      : schemes.filter(s=>s.category.includes(currentSchemeFilter));
+      : schemes.filter(s=>s.category && s.category.includes(currentSchemeFilter));
 
     if(filtered.length===0){
       list.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>या प्रकारात अजून कोणतीही योजना नाही</p></div>`;
       return;
     }
 
-    list.innerHTML=filtered.map(s=>{
-      const icon=Object.entries(schemeIcons).find(([k])=>s.category.includes(k.replace(/^[^\s]+\s/,'')))?.[1]||'📋';
-      return `
-        <div class="scheme-card">
-          <div class="scheme-header">
-            <div class="scheme-icon">${s.category.split(' ')[0]}</div>
-            <div class="scheme-meta">
-              <div class="title">${s.title}</div>
-              <div class="by">📌 ${s.by} • ${s.time}</div>
-            </div>
-            <div class="scheme-badge">${s.category.replace(/^[^\s]+\s/,'')}</div>
+    list.innerHTML=filtered.map(s=>`
+      <div class="scheme-card">
+        <div class="scheme-header">
+          <div class="scheme-icon">${s.category?s.category.split(' ')[0]:'📋'}</div>
+          <div class="scheme-meta">
+            <div class="title">${s.title}</div>
+            <div class="by">📌 ${s.posted_by} • ${timeAgo(s.created_at)}</div>
           </div>
-          <div class="scheme-desc">${s.desc}</div>
-          ${s.deadline?`<div class="scheme-deadline">⏰ अंतिम तारीख: ${s.deadline}</div>`:''}
-        </div>`;
-    }).join('');
+          <div class="scheme-badge">${s.category?s.category.replace(/^[^\s]+\s/,''):''}</div>
+        </div>
+        <div class="scheme-desc">${s.description}</div>
+        ${s.deadline?`<div class="scheme-deadline">⏰ अंतिम तारीख: ${s.deadline}</div>`:''}
+      </div>`
+    ).join('');
   }
 
   // INIT
-  renderFeed();
-  renderSchemes();
+  loadProblems();
+  loadSchemes();
 </script>
 </body>
 </html>
