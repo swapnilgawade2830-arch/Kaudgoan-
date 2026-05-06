@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>कौडगाव</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron: #FF6B1A;
+    --green: #2D7D46;
+    --blue: #1565C0;
+    --cream: #FFF8EE;
+    --dark: #1A1208;
+    --mud: #8B5E3C;
+    --light-green: #E8F5EC;
+    --light-blue: #E3F0FF;
+    --border: #E8D5B7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Baloo 2', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--green);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: var(--saffron);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text h1 { font-size: 19px; color: white; font-weight: 800; line-height: 1; }
+  .logo-text p { font-size: 11px; color: rgba(255,255,255,0.75); }
+
+  .admin-btn {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .admin-btn:hover { background: rgba(255,255,255,0.25); }
+  .admin-btn.logged-in { background: var(--saffron); border-color: var(--saffron); }
+
+  .tab-bar { display: flex; background: rgba(0,0,0,0.2); }
+
+  .tab {
+    flex: 1; padding: 9px 4px;
+    text-align: center;
+    color: rgba(255,255,255,0.65);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    color: white;
+    border-bottom-color: var(--saffron);
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* MAIN */
+  main { max-width: 600px; margin: 0 auto; padding: 0 14px 100px; }
+
+  /* SECTIONS */
+  .section { display: none; padding-top: 16px; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+
+  /* FORM CARD */
+  .form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 14px;
+  }
+
+  .form-title {
+    font-size: 17px; font-weight: 800; color: var(--green);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+
+  .field-label {
+    font-size: 12px; font-weight: 700; color: var(--mud);
+    margin-bottom: 5px; margin-top: 12px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  input[type="text"], input[type="password"], textarea {
+    width: 100%; padding: 11px 13px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-family: 'Baloo 2', sans-serif; font-size: 15px;
+    color: var(--dark); background: var(--cream);
+    outline: none; transition: border-color 0.2s;
+  }
+
+  input:focus, textarea:focus { border-color: var(--green); background: white; }
+  textarea { resize: vertical; min-height: 90px; }
+
+  .category-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+
+  .chip {
+    padding: 6px 13px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: white;
+    font-family: 'Baloo 2', sans-serif; font-size: 13px;
+    cursor: pointer; transition: all 0.2s; font-weight: 600; color: var(--mud);
+  }
+  .chip.selected { background: var(--green); color: white; border-color: var(--green); }
+  .chip.blue-selected { background: var(--blue); color: white; border-color: var(--blue); }
+
+  .photo-upload {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 18px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--cream);
+  }
+  .photo-upload:hover { border-color: var(--green); background: var(--light-green); }
+  .photo-upload input { display: none; }
+  .photo-upload-icon { font-size: 28px; margin-bottom: 5px; }
+  .photo-upload p { font-size: 13px; color: var(--mud); font-weight: 600; }
+  .photo-upload small { font-size: 11px; color: #aaa; }
+
+  .preview-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-top: 8px; }
+  .preview-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:2px solid var(--border); }
+
+  .submit-btn {
+    width: 100%; padding: 13px;
+    background: var(--saffron); color: white; border: none;
+    border-radius: 12px; font-family: 'Baloo 2', sans-serif;
+    font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 16px;
+    transition: all 0.2s;
+  }
+  .submit-btn:hover { background: #e55a10; transform: translateY(-1px); }
+  .submit-btn.blue { background: var(--blue); }
+  .submit-btn.blue:hover { background: #0d47a1; }
+
+  /* FILTER CHIPS */
+  .filter-chips {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+
+  .filter-chip {
+    padding: 5px 12px; border-radius: 15px;
+    border: 1.5px solid var(--border); background: white;
+    font-family: 'Baloo 2', sans-serif; font-size: 12px;
+    cursor: pointer; white-space: nowrap; font-weight: 600; color: var(--mud);
+    transition: all 0.2s;
+  }
+  .filter-chip.active { background: var(--green); color: white; border-color: var(--green); }
+  .filter-chip.blue-active { background: var(--blue); color: white; border-color: var(--blue); }
+
+  /* PROBLEM CARD */
+  .problem-card {
+    background: white; border-radius: 14px; padding: 14px;
+    margin-bottom: 10px; border: 1.5px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: slideUp 0.3s ease;
+  }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 9px; }
+  .card-user { display: flex; align-items: center; gap: 9px; }
+
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: white; flex-shrink: 0;
+  }
+
+  .user-info .name { font-size: 14px; font-weight: 700; }
+  .user-info .time { font-size: 11px; color: #aaa; }
+
+  .category-badge {
+    padding: 3px 9px; border-radius: 9px;
+    font-size: 11px; font-weight: 700; color: white; white-space: nowrap;
+  }
+
+  .card-desc { font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 9px; }
+
+  .card-photos { display: grid; gap: 5px; margin-bottom: 9px; }
+  .card-photos.one { grid-template-columns: 1fr; }
+  .card-photos.two { grid-template-columns: 1fr 1fr; }
+  .card-photos.three { grid-template-columns: 1fr 1fr 1fr; }
+  .card-photo { width:100%; border-radius:9px; object-fit:cover; cursor:pointer; }
+  .card-photos.one .card-photo { max-height: 190px; }
+  .card-photos.two .card-photo { height: 110px; }
+  .card-photos.three .card-photo { height: 80px; }
+
+  .card-actions {
+    display: flex; align-items: center; gap: 8px;
+    padding-top: 9px; border-top: 1px solid var(--border);
+  }
+
+  .action-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none;
+    font-family: 'Baloo 2', sans-serif; font-size: 13px;
+    color: #888; cursor: pointer; padding: 4px 8px;
+    border-radius: 8px; font-weight: 600; transition: all 0.2s;
+  }
+  .action-btn:hover { background: var(--light-green); color: var(--green); }
+  .action-btn.liked { color: var(--saffron); }
+
+  .status-badge { margin-left: auto; padding: 3px 9px; border-radius: 9px; font-size: 11px; font-weight: 700; }
+  .status-new { background: #FFF0E6; color: var(--saffron); }
+  .status-seen { background: #E8F5EC; color: var(--green); }
+
+  /* SCHEME CARD */
+  .scheme-card {
+    background: white; border-radius: 14px; padding: 16px;
+    margin-bottom: 10px; border: 1.5px solid #BBDEFB;
+    box-shadow: 0 2px 8px rgba(21,101,192,0.08); animation: slideUp 0.3s ease;
+  }
+
+  .scheme-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+
+  .scheme-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--light-blue); display: flex;
+    align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  }
+
+  .scheme-meta { flex: 1; }
+  .scheme-meta .title { font-size: 15px; font-weight: 800; color: var(--blue); line-height: 1.2; }
+  .scheme-meta .by { font-size: 11px; color: #888; margin-top: 2px; }
+
+  .scheme-badge {
+    padding: 3px 9px; border-radius: 9px; font-size: 11px;
+    font-weight: 700; background: var(--light-blue); color: var(--blue); white-space: nowrap;
+  }
+
+  .scheme-desc { font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 10px; }
+
+  .scheme-deadline {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #FFF8E1; color: #F57F17;
+    padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+  }
+
+  /* ADMIN LOGIN MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: white; border-radius: 20px; padding: 24px;
+    width: 100%; max-width: 340px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+  }
+
+  .modal-title { font-size: 18px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: #888; margin-bottom: 18px; }
+
+  .modal-btn {
+    width: 100%; padding: 13px; background: var(--green);
+    color: white; border: none; border-radius: 12px;
+    font-family: 'Baloo 2', sans-serif; font-size: 16px;
+    font-weight: 800; cursor: pointer; margin-top: 14px; transition: all 0.2s;
+  }
+  .modal-btn:hover { background: #1e5e32; }
+
+  .modal-cancel {
+    width: 100%; padding: 10px; background: none;
+    color: #888; border: none; font-family: 'Baloo 2', sans-serif;
+    font-size: 14px; cursor: pointer; margin-top: 6px;
+  }
+
+  .error-msg { color: #E74C3C; font-size: 13px; font-weight: 600; margin-top: 8px; display: none; }
+
+  /* ADMIN BANNER */
+  .admin-banner {
+    background: linear-gradient(135deg, #1565C0, #0d47a1);
+    color: white; border-radius: 12px; padding: 12px 16px;
+    margin-bottom: 14px; display: none;
+    align-items: center; justify-content: space-between;
+  }
+  .admin-banner.show { display: flex; }
+  .admin-banner .ab-text { font-size: 13px; font-weight: 700; }
+  .admin-banner .ab-sub { font-size: 11px; opacity: 0.8; }
+  .logout-btn {
+    background: rgba(255,255,255,0.2); color: white; border: none;
+    padding: 5px 11px; border-radius: 10px; font-family: 'Baloo 2', sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+
+  /* TOAST */
+  .success-toast {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--green); color: white;
+    padding: 11px 22px; border-radius: 30px;
+    font-weight: 700; font-size: 14px; z-index: 999;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .success-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* LIGHTBOX */
+  .lightbox {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92); z-index: 300;
+    align-items: center; justify-content: center;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 90%; max-height: 90vh; border-radius: 10px; }
+  .lightbox-close {
+    position: absolute; top: 16px; right: 16px;
+    color: white; font-size: 28px; cursor: pointer;
+    background: none; border: none;
+  }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 50px 20px; color: #ccc; }
+  .empty-state .icon { font-size: 44px; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; font-weight: 600; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">🏡</div>
+      <div class="logo-text">
+        <h1>कौडगाव</h1>
+        <p>कौडगाव, तुमचा आवाज</p>
+      </div>
+    </div>
+    <button class="admin-btn" id="adminBtn" onclick="openLoginModal()">🔒 Admin</button>
+  </div>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('feed')">📋 तक्रारी</div>
+    <div class="tab" onclick="switchTab('schemes')">📢 योजना</div>
+    <div class="tab" onclick="switchTab('submit')">➕ तक्रार द्या</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- FEED TAB -->
+  <section class="section active" id="feedSection">
+    <div class="filter-chips" id="filterChips">
+      <div class="filter-chip active" onclick="filterFeed('all', this)">सर्व</div>
+      <div class="filter-chip" onclick="filterFeed('रस्ता', this)">🛣️ रस्ता</div>
+      <div class="filter-chip" onclick="filterFeed('पाणी', this)">💧 पाणी</div>
+      <div class="filter-chip" onclick="filterFeed('वीज', this)">⚡ वीज</div>
+      <div class="filter-chip" onclick="filterFeed('आरोग्य', this)">🏥 आरोग्य</div>
+      <div class="filter-chip" onclick="filterFeed('शाळा', this)">📚 शाळा</div>
+      <div class="filter-chip" onclick="filterFeed('इतर', this)">🔖 इतर</div>
+    </div>
+    <div id="feedList"></div>
+  </section>
+
+  <!-- SCHEMES TAB -->
+  <section class="section" id="schemesSection">
+    <!-- Admin banner -->
+    <div class="admin-banner" id="schemeAdminBanner">
+      <div>
+        <div class="ab-text">✅ Admin Mode चालू आहे</div>
+        <div class="ab-sub">तुम्ही नवीन योजना पोस्ट करू शकता</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Add scheme form (admin only) -->
+    <div class="form-card" id="schemeFormCard" style="display:none">
+      <div class="form-title">📢 नवीन योजना जोडा</div>
+
+      <div class="field-label">योजनेचे नाव</div>
+      <input type="text" id="schemeTitle" placeholder="उदा: प्रधानमंत्री आवास योजना">
+
+      <div class="field-label">प्रकार</div>
+      <div class="category-chips" id="schemeCatChips">
+        <div class="chip" onclick="selectSchemeCat(this, '🏠 घरकुल')">🏠 घरकुल</div>
+        <div class="chip" onclick="selectSchemeCat(this, '👩‍🌾 शेती')">👩‍🌾 शेती</div>
+        <div class="chip" onclick="selectSchemeCat(this, '📚 शिक्षण')">📚 शिक्षण</div>
+        <div class="chip" onclick="selectSchemeCat(this, '🏥 आरोग्य')">🏥 आरोग्य</div>
+        <div class="chip" onclick="selectSchemeCat(this, '💰 आर्थिक')">💰 आर्थिक</div>
+        <div class="chip" onclick="selectSchemeCat(this, '🔖 इतर')">🔖 इतर</div>
+      </div>
+
+      <div class="field-label">योजनेची माहिती</div>
+      <textarea id="schemeDesc" placeholder="योजनेची संपूर्ण माहिती लिहा... कोणाला लाभ, कसे अर्ज करावे..."></textarea>
+
+      <div class="field-label">अर्जाची अंतिम तारीख (ऐच्छिक)</div>
+      <input type="text" id="schemeDeadline" placeholder="उदा: ३१ मे २०२५">
+
+      <div class="field-label">पोस्ट करणारे</div>
+      <div class="category-chips" id="schemeByChips">
+        <div class="chip" onclick="selectSchemeBy(this, 'Swapnil Gawade (Admin)')">Swapnil Gawade</div>
+        <div class="chip" onclick="selectSchemeBy(this, 'सरपंच')">सरपंच</div>
+        <div class="chip" onclick="selectSchemeBy(this, 'ग्रामपंचायत')">ग्रामपंचायत</div>
+      </div>
+
+      <button class="submit-btn blue" onclick="submitScheme()">📢 योजना पोस्ट करा</button>
+    </div>
+
+    <div class="filter-chips" id="schemeFilterChips">
+      <div class="filter-chip blue-active" onclick="filterSchemes('all', this)">सर्व</div>
+      <div class="filter-chip" onclick="filterSchemes('घरकुल', this)">🏠 घरकुल</div>
+      <div class="filter-chip" onclick="filterSchemes('शेती', this)">👩‍🌾 शेती</div>
+      <div class="filter-chip" onclick="filterSchemes('शिक्षण', this)">📚 शिक्षण</div>
+      <div class="filter-chip" onclick="filterSchemes('आरोग्य', this)">🏥 आरोग्य</div>
+      <div class="filter-chip" onclick="filterSchemes('आर्थिक', this)">💰 आर्थिक</div>
+    </div>
+
+    <div id="schemeList"></div>
+  </section>
+
+  <!-- SUBMIT TAB -->
+  <section class="section" id="submitSection">
+    <div class="form-card">
+      <div class="form-title">📝 तुमची तक्रार सांगा</div>
+
+      <div class="field-label">तुमचे नाव</div>
+      <input type="text" id="userName" placeholder="उदा: सुरेश पाटील">
+
+      <div class="field-label">तक्रारीचा प्रकार</div>
+      <div class="category-chips" id="catChips">
+        <div class="chip" onclick="selectCat(this, '🛣️ रस्ता')">🛣️ रस्ता</div>
+        <div class="chip" onclick="selectCat(this, '💧 पाणी')">💧 पाणी</div>
+        <div class="chip" onclick="selectCat(this, '⚡ वीज')">⚡ वीज</div>
+        <div class="chip" onclick="selectCat(this, '🏥 आरोग्य')">🏥 आरोग्य</div>
+        <div class="chip" onclick="selectCat(this, '📚 शाळा')">📚 शाळा</div>
+        <div class="chip" onclick="selectCat(this, '🔖 इतर')">🔖 इतर</div>
+      </div>
+
+      <div class="field-label">तक्रार सांगा</div>
+      <textarea id="problemDesc" placeholder="सविस्तर लिहा... काय समस्या आहे, कधीपासून आहे, कुठे आहे..."></textarea>
+
+      <div class="field-label">फोटो टाका (ऐच्छिक)</div>
+      <label class="photo-upload" for="photoInput">
+        <div class="photo-upload-icon">📷</div>
+        <p>फोटो काढा किंवा गॅलरीतून निवडा</p>
+        <small>जास्तीत जास्त ३ फोटो</small>
+        <input type="file" id="photoInput" accept="image/*" multiple onchange="previewPhotos(event)">
+      </label>
+      <div class="preview-grid" id="previewGrid"></div>
+
+      <button class="submit-btn" onclick="submitProblem()">🚀 तक्रार पाठवा</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Admin Login Modal -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-title">🔒 Admin Login</div>
+    <div class="modal-sub">फक्त Swapnil Gawade आणि सरपंच यांच्यासाठी</div>
+    <div class="field-label">Username</div>
+    <input type="text" id="loginUser" placeholder="username टाका">
+    <div class="field-label">Password</div>
+    <input type="password" id="loginPass" placeholder="password टाका">
+    <div class="error-msg" id="loginError">❌ चुकीचे username किंवा password!</div>
+    <button class="modal-btn" onclick="doLogin()">Login करा</button>
+    <button class="modal-cancel" onclick="closeLoginModal()">रद्द करा</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="success-toast" id="toast"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+  // ===== SUPABASE CONFIG =====
+  const SUPABASE_URL = 'https://elkgxcqbmhrmuqwodode.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_UE6WFUfnBgyO0vHrcsvExA_gT7EISBd';
+
+  async function dbGet(table, filter='') {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc${filter}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    return res.json();
+  }
+
+  async function dbInsert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', 'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  }
+
+  async function dbUpdate(table, id, data) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+  }
+
+  // ===== DATA =====
+  const ADMINS = [
+    { user: "swapnil", pass: "swap@2830", name: "Swapnil Gawade" },
+    { user: "sarpanch", pass: "lakhanm@123", name: "सरपंच" }
+  ];
+
+  let isAdmin = false;
+  let adminName = "";
+  let problems = [];
+  let schemes = [];
+  let likedIds = JSON.parse(localStorage.getItem('likedIds')||'[]');
+  let selectedCat = "";
+  let selectedPhotos = [];
+  let currentFilter = "all";
+  let selectedSchemeCat = "";
+  let selectedSchemeBy = "";
+  let currentSchemeFilter = "all";
+
+  const catColors = {
+    "🛣️ रस्ता": "#E67E22", "💧 पाणी": "#2980B9",
+    "⚡ वीज": "#F39C12", "🏥 आरोग्य": "#E74C3C",
+    "📚 शाळा": "#9B59B6", "🔖 इतर": "#27AE60"
+  };
+
+  const avatarColors = ["#E74C3C","#3498DB","#2ECC71","#F39C12","#9B59B6","#1ABC9C","#E67E22","#D35400"];
+
+  function getInitials(name) { return name.split(' ').map(n=>n[0]).join('').slice(0,2); }
+  function getAvatarColor(name) {
+    let s=0; for(let c of name) s+=c.charCodeAt(0);
+    return avatarColors[s % avatarColors.length];
+  }
+
+  function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - new Date(ts)) / 60000);
+    if(diff < 1) return 'आत्ता';
+    if(diff < 60) return diff + ' मिनिटांपूर्वी';
+    if(diff < 1440) return Math.floor(diff/60) + ' तासांपूर्वी';
+    return Math.floor(diff/1440) + ' दिवसांपूर्वी';
+  }
+
+  // ===== TAB =====
+  function switchTab(tab) {
+    ['feed','schemes','submit'].forEach((t,i) => {
+      document.querySelectorAll('.tab')[i].classList.toggle('active', t===tab);
+      document.getElementById(t==='feed'?'feedSection':t==='schemes'?'schemesSection':'submitSection')
+        .classList.toggle('active', t===tab);
+    });
+    if(tab==='feed') loadProblems();
+    if(tab==='schemes') loadSchemes();
+  }
+
+  // ===== ADMIN LOGIN =====
+  function openLoginModal() {
+    if(isAdmin) { logout(); return; }
+    document.getElementById('loginModal').classList.add('open');
+    document.getElementById('loginError').style.display='none';
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+  }
+
+  function closeLoginModal() {
+    document.getElementById('loginModal').classList.remove('open');
+  }
+
+  function doLogin() {
+    const u = document.getElementById('loginUser').value.trim().toLowerCase();
+    const p = document.getElementById('loginPass').value.trim();
+    const admin = ADMINS.find(a => a.user===u && a.pass===p);
+    if(admin) {
+      isAdmin = true; adminName = admin.name;
+      closeLoginModal(); updateAdminUI();
+      showToast('✅ ' + adminName + ' यांनी login केले!');
+    } else {
+      document.getElementById('loginError').style.display='block';
+    }
+  }
+
+  function logout() {
+    isAdmin = false; adminName = "";
+    updateAdminUI(); showToast('👋 Logout झाले');
+  }
+
+  function updateAdminUI() {
+    const btn = document.getElementById('adminBtn');
+    const banner = document.getElementById('schemeAdminBanner');
+    const formCard = document.getElementById('schemeFormCard');
+    if(isAdmin) {
+      btn.textContent = '✅ ' + adminName; btn.classList.add('logged-in');
+      banner.classList.add('show'); formCard.style.display='block';
+    } else {
+      btn.textContent = '🔒 Admin'; btn.classList.remove('logged-in');
+      banner.classList.remove('show'); formCard.style.display='none';
+    }
+  }
+
+  // ===== PROBLEM FORM =====
+  function selectCat(el, cat) {
+    document.querySelectorAll('#catChips .chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected'); selectedCat=cat;
+  }
+
+  function previewPhotos(e) {
+    const files=Array.from(e.target.files).slice(0,3);
+    selectedPhotos=files;
+    const grid=document.getElementById('previewGrid');
+    grid.innerHTML='';
+    files.forEach(file=>{
+      const r=new FileReader();
+      r.onload=ev=>{
+        const img=document.createElement('img');
+        img.src=ev.target.result; img.className='preview-img';
+        grid.appendChild(img);
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function submitProblem() {
+    const name=document.getElementById('userName').value.trim();
+    const desc=document.getElementById('problemDesc').value.trim();
+    if(!name){alert('नाव टाकणे आवश्यक आहे!');return;}
+    if(!selectedCat){alert('तक्रारीचा प्रकार निवडा!');return;}
+    if(!desc){alert('तक्रार सांगा!');return;}
+
+    const btn = document.querySelector('#submitSection .submit-btn');
+    btn.textContent = '⏳ पाठवत आहे...'; btn.disabled = true;
+
+    await dbInsert('problems', {
+      name, category: selectedCat, description: desc,
+      time_posted: 'आत्ता', likes: 0, status: 'new'
+    });
+
+    document.getElementById('userName').value='';
+    document.getElementById('problemDesc').value='';
+    document.getElementById('previewGrid').innerHTML='';
+    document.getElementById('photoInput').value='';
+    document.querySelectorAll('#catChips .chip').forEach(c=>c.classList.remove('selected'));
+    selectedCat=''; selectedPhotos=[];
+    btn.textContent='🚀 तक्रार पाठवा'; btn.disabled=false;
+    showToast('✅ तक्रार यशस्वीरित्या नोंदवली!');
+    switchTab('feed');
+  }
+
+  // ===== SCHEME FORM =====
+  function selectSchemeCat(el, cat) {
+    document.querySelectorAll('#schemeCatChips .chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected'); selectedSchemeCat=cat;
+  }
+
+  function selectSchemeBy(el, by) {
+    document.querySelectorAll('#schemeByChips .chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected'); selectedSchemeBy=by;
+  }
+
+  async function submitScheme() {
+    if(!isAdmin){alert('Admin login आवश्यक!');return;}
+    const title=document.getElementById('schemeTitle').value.trim();
+    const desc=document.getElementById('schemeDesc').value.trim();
+    const deadline=document.getElementById('schemeDeadline').value.trim();
+    if(!title){alert('योजनेचे नाव टाका!');return;}
+    if(!selectedSchemeCat){alert('प्रकार निवडा!');return;}
+    if(!desc){alert('माहिती लिहा!');return;}
+    if(!selectedSchemeBy){alert('कोण पोस्ट करत आहे ते निवडा!');return;}
+
+    const btn = document.querySelector('#schemeFormCard .submit-btn');
+    btn.textContent='⏳ पोस्ट करत आहे...'; btn.disabled=true;
+
+    await dbInsert('schemes', {
+      title, category: selectedSchemeCat, description: desc,
+      deadline: deadline||'', posted_by: selectedSchemeBy, time_posted: 'आत्ता'
+    });
+
+    document.getElementById('schemeTitle').value='';
+    document.getElementById('schemeDesc').value='';
+    document.getElementById('schemeDeadline').value='';
+    document.querySelectorAll('#schemeCatChips .chip, #schemeByChips .chip').forEach(c=>c.classList.remove('selected'));
+    selectedSchemeCat=''; selectedSchemeBy='';
+    btn.textContent='📢 योजना पोस्ट करा'; btn.disabled=false;
+    showToast('📢 योजना यशस्वीरित्या पोस्ट केली!');
+    loadSchemes();
+  }
+
+  // ===== FILTERS =====
+  function filterFeed(cat, el) {
+    currentFilter=cat;
+    document.querySelectorAll('#filterChips .filter-chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active'); renderFeed();
+  }
+
+  function filterSchemes(cat, el) {
+    currentSchemeFilter=cat;
+    document.querySelectorAll('#schemeFilterChips .filter-chip').forEach(c=>{
+      c.classList.remove('active','blue-active');
+    });
+    el.classList.add('blue-active'); renderSchemes();
+  }
+
+  // ===== LIKE =====
+  async function toggleLike(id, currentLikes) {
+    const alreadyLiked = likedIds.includes(id);
+    const newLikes = alreadyLiked ? currentLikes-1 : currentLikes+1;
+    if(alreadyLiked) likedIds = likedIds.filter(x=>x!==id);
+    else likedIds.push(id);
+    localStorage.setItem('likedIds', JSON.stringify(likedIds));
+    await dbUpdate('problems', id, {likes: newLikes});
+    loadProblems();
+  }
+
+  // ===== LOAD DATA =====
+  async function loadProblems() {
+    document.getElementById('feedList').innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>लोड होत आहे...</p></div>';
+    problems = await dbGet('problems');
+    document.getElementById('problemCount').textContent = problems.length + ' तक्रारी';
+    renderFeed();
+  }
+
+  async function loadSchemes() {
+    document.getElementById('schemeList').innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>लोड होत आहे...</p></div>';
+    schemes = await dbGet('schemes');
+    renderSchemes();
+  }
+
+  // ===== LIGHTBOX =====
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src=src;
+    document.getElementById('lightbox').classList.add('open');
+  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+  // ===== TOAST =====
+  function showToast(msg) {
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2500);
+  }
+
+  // ===== RENDER FEED =====
+  function renderFeed() {
+    const list=document.getElementById('feedList');
+    const filtered = currentFilter==='all' ? problems
+      : problems.filter(p=>p.category && p.category.includes(currentFilter));
+
+    document.getElementById('problemCount').textContent = problems.length + ' तक्रारी';
+
+    if(filtered.length===0){
+      list.innerHTML=`<div class="empty-state"><div class="icon">🌾</div><p>या प्रकारात अजून कोणतीही तक्रार नाही</p></div>`;
+      return;
+    }
+
+    list.innerHTML=filtered.map(p=>{
+      const catColor=catColors[p.category]||'#888';
+      const avatarColor=getAvatarColor(p.name||'?');
+      const initials=getInitials(p.name||'?');
+      const liked = likedIds.includes(p.id);
+      return `
+        <div class="problem-card">
+          <div class="card-top">
+            <div class="card-user">
+              <div class="avatar" style="background:${avatarColor}">${initials}</div>
+              <div class="user-info">
+                <div class="name">${p.name}</div>
+                <div class="time">${timeAgo(p.created_at)}</div>
+              </div>
+            </div>
+            <div class="category-badge" style="background:${catColor}">${p.category}</div>
+          </div>
+          <div class="card-desc">${p.description}</div>
+          <div class="card-actions">
+            <button class="action-btn ${liked?'liked':''}" onclick="toggleLike(${p.id}, ${p.likes})">
+              👍 ${p.likes||0} लोक सहमत
+            </button>
+            <div class="status-badge ${p.status==='new'?'status-new':'status-seen'}">
+              ${p.status==='new'?'🔴 नवीन':'✅ पाहिले'}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== RENDER SCHEMES =====
+  function renderSchemes() {
+    const list=document.getElementById('schemeList');
+    const filtered = currentSchemeFilter==='all' ? schemes
+      : schemes.filter(s=>s.category && s.category.includes(currentSchemeFilter));
+
+    if(filtered.length===0){
+      list.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>या प्रकारात अजून कोणतीही योजना नाही</p></div>`;
+      return;
+    }
+
+    list.innerHTML=filtered.map(s=>`
+      <div class="scheme-card">
+        <div class="scheme-header">
+          <div class="scheme-icon">${s.category?s.category.split(' ')[0]:'📋'}</div>
+          <div class="scheme-meta">
+            <div class="title">${s.title}</div>
+            <div class="by">📌 ${s.posted_by} • ${timeAgo(s.created_at)}</div>
+          </div>
+          <div class="scheme-badge">${s.category?s.category.replace(/^[^\s]+\s/,''):''}</div>
+        </div>
+        <div class="scheme-desc">${s.description}</div>
+        ${s.deadline?`<div class="scheme-deadline">⏰ अंतिम तारीख: ${s.deadline}</div>`:''}
+      </div>`
+    ).join('');
+  }
+
+  // INIT
+  loadProblems();
+  loadSchemes();
+</script>
+</body>
+</html>
